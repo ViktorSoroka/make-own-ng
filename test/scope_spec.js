@@ -3,19 +3,18 @@ var Scope = require('../src/scope');
 var _     = require('lodash');
 
 describe('Scope', function () {
-    xit('can be constructed and used as an object', function () {
-        var scope       = new Scope();
-        scope.aProperty = 1;
-        expect(scope.aProperty).toBe(1);
-    });
-
     var scope;
 
     beforeEach(function () {
         scope = new Scope();
     });
 
-    xdescribe('digest', function () {
+    it('can be constructed and used as an object', function () {
+        scope.aProperty = 1;
+        expect(scope.aProperty).toBe(1);
+    });
+
+    describe('digest', function () {
 
         it('calls the listener function of a watch on first $digest', function () {
             var watchFn    = function () {
@@ -348,27 +347,27 @@ describe('Scope', function () {
             expect(scope.counter).toBe(1);
         });
 
-    });
+        it('allows destroying several $watches during digest', function () {
+            scope.aValue      = 'abc';
+            scope.counter     = 0;
+            var destroyWatch1 = scope.$watch(
+                function (scope) {
+                    destroyWatch1();
+                    destroyWatch2();
+                }
+            );
+            var destroyWatch2 = scope.$watch(
+                function (scope) {
+                    return scope.aValue;
+                },
+                function (newValue, oldValue, scope) {
+                    scope.counter++;
+                }
+            );
+            scope.$digest();
+            expect(scope.counter).toBe(0);
+        });
 
-    it('allows destroying several $watches during digest', function () {
-        scope.aValue      = 'abc';
-        scope.counter     = 0;
-        var destroyWatch1 = scope.$watch(
-            function (scope) {
-                destroyWatch1();
-                destroyWatch2();
-            }
-        );
-        var destroyWatch2 = scope.$watch(
-            function (scope) {
-                return scope.aValue;
-            },
-            function (newValue, oldValue, scope) {
-                scope.counter++;
-            }
-        );
-        scope.$digest();
-        expect(scope.counter).toBe(0);
     });
 
 });
