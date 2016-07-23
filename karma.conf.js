@@ -9,7 +9,7 @@ module.exports = function(config) {
             'test/**/*.js': ['jshint', 'browserify'],
             'src/**/*.js': ['jshint', 'browserify']
         },
-        browsers: ['PhantomJS'],
+        browsers: ['Chrome'],
 
         autoWatch: true,
 
