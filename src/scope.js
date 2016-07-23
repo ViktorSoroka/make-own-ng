@@ -9,13 +9,27 @@ function Scope() {
 Scope.prototype.$watch = function (watchFn, listenerFn) {
     var watcher = {
         watchFn: watchFn,
-        listenerFn: listenerFn
+        listenerFn: listenerFn,
+        last: function () {
+        }
     };
+
     this.$$watchers.push(watcher);
 };
 
 Scope.prototype.$digest = function () {
+    var self = this;
+    var newValue;
+    var oldValue;
+
     _.forEach(this.$$watchers, function (watcher) {
-        watcher.listenerFn();
+        newValue = watcher.watchFn(self);
+        oldValue = watcher.last;
+
+        if (newValue !== oldValue) {
+            watcher.listenerFn(newValue, oldValue, self);
+            watcher.last = newValue;
+        }
+
     });
 };
