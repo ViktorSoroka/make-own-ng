@@ -19,15 +19,26 @@ Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
         valueEq   : !!valueEq
     };
 
-    this.$$watchers.push(watcher);
+    this.$$watchers.unshift(watcher);
     this.$lastDirtyWatch = null;
+
+    return function () {
+        var index = this.$$watchers.indexOf(watcher);
+
+        if (index >= 0) {
+            this.$lastDirtyWatch = null;
+            this.$$watchers.splice(index, 1);
+        }
+    }.bind(this);
 };
 
 Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
     if (valueEq) {
         return _.isEqual(newValue, oldValue);
     } else {
-        return newValue === oldValue;
+        return newValue === oldValue ||
+            (typeof newValue === 'number' && typeof oldValue === 'number' &&
+            isNaN(newValue) && isNaN(oldValue));
     }
 };
 
@@ -37,17 +48,23 @@ Scope.prototype.$$digestOnce = function () {
     var oldValue;
     var isDirty = false;
 
-    _.forEach(this.$$watchers, function (watcher) {
-        newValue = watcher.watchFn(self);
-        oldValue = watcher.last;
+    _.forEachRight(this.$$watchers, function (watcher) {
+        try {
+            if (watcher) {
+                newValue = watcher.watchFn(self);
+                oldValue = watcher.last;
 
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-            self.$lastDirtyWatch = watcher;
-            watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), self);
-            watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
-            isDirty      = true;
-        } else if (watcher === self.$lastDirtyWatch) {
-            return false;
+                if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+                    self.$lastDirtyWatch = watcher;
+                    watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), self);
+                    watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
+                    isDirty      = true;
+                } else if (watcher === self.$lastDirtyWatch) {
+                    return false;
+                }
+            }
+        } catch (e) {
+            console.log(e);
         }
 
     });
