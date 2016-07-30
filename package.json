@@ -27,7 +27,7 @@
     "test": "karma start",
     "build": "browserify src/bootstrap.js > myangular.js",
     "build:minified": "browserify src/bootstrap.js | uglifyjs -mc > myangular.min.js",
-    "ci:test": "karma start --browsers PhantomJS"
+    "ci:test": "karma start --browsers PhantomJS --single-run"
   },
   "author": "",
   "license": "ISC"
