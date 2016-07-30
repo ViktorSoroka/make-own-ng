@@ -6,13 +6,15 @@ function initWatchVal() {
 }
 
 function Scope() {
+    this.$root = this;
     this.$$watchers = [];
-    this.$lastDirtyWatch = null;
+    this.$$lastDirtyWatch = null;
     this.$$asyncQueue = [];
     this.$$applyAsyncQueue = [];
     this.$$postDigestQueue = [];
     this.$$phase = null;
     this.$$applyAsyncId = null;
+    this.$$children = [];
 }
 
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
@@ -25,13 +27,13 @@ Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
     };
 
     this.$$watchers.unshift(watcher);
-    this.$lastDirtyWatch = null;
+    this.$root.$$lastDirtyWatch = null;
 
     return function () {
         var index = this.$$watchers.indexOf(watcher);
 
         if (index >= 0) {
-            this.$lastDirtyWatch = null;
+            this.$root.$$lastDirtyWatch = null;
             this.$$watchers.splice(index, 1);
         }
     }.bind(this);
@@ -98,7 +100,7 @@ Scope.prototype.$evalAsync = function (expr) {
     if (!self.$$phase && !self.$$asyncQueue.length) {
         setTimeout(function () {
             if (self.$$asyncQueue.length) {
-                self.$digest();
+                self.$root.$digest();
             }
         }, 0);
     }
@@ -113,7 +115,7 @@ Scope.prototype.$apply = function (expr) {
         return this.$eval(expr);
     } finally {
         this.$clearPhase();
-        this.$digest();
+        this.$root.$digest();
     }
 };
 
@@ -130,7 +132,7 @@ Scope.prototype.$$flushApplyAsync = function () {
         } catch (e) {
             console.log(e);
         }
-        self.$$applyAsyncId = null;
+        this.$root.$$applyAsyncId = null;
     }
 };
 
@@ -141,8 +143,8 @@ Scope.prototype.$applyAsync = function (expr) {
         self.$eval(expr);
     });
 
-    if (self.$$applyAsyncId === null) {
-        self.$$applyAsyncId = setTimeout(function () {
+    if (self.$root.$$applyAsyncId === null) {
+        self.$root.$$applyAsyncId = setTimeout(function () {
             self.$apply(_.bind(self.$$flushApplyAsync, self));
         }, 0);
     }
@@ -169,31 +171,48 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
     }
 };
 
+Scope.prototype.$$everyScope = function (fn) {
+    if (fn(this)) {
+        return this.$$children.every(function (child) {
+            return child.$$everyScope(fn);
+        });
+    } else {
+        return false;
+    }
+};
+
 Scope.prototype.$$digestOnce = function () {
-    var self = this;
     var newValue;
     var oldValue;
     var isDirty = false;
+    var continueLoop = true;
+    var self = this;
 
-    _.forEachRight(this.$$watchers, function (watcher) {
-        try {
-            if (watcher) {
-                newValue = watcher.watchFn(self);
-                oldValue = watcher.last;
+    this.$$everyScope(function (scope) {
 
-                if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-                    self.$lastDirtyWatch = watcher;
-                    watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), self);
-                    watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
-                    isDirty = true;
-                } else if (watcher === self.$lastDirtyWatch) {
-                    return false;
+        _.forEachRight(scope.$$watchers, function (watcher) {
+            try {
+                if (watcher) {
+                    newValue = watcher.watchFn(scope);
+                    oldValue = watcher.last;
+
+                    if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+                        self.$root.$$lastDirtyWatch = watcher;
+                        watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), scope);
+                        watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
+                        isDirty = true;
+                    } else if (watcher === self.$root.$$lastDirtyWatch) {
+                        continueLoop = false;
+                        return false;
+                    }
                 }
+            } catch (e) {
+                console.log(e);
             }
-        } catch (e) {
-            console.log(e);
-        }
 
+        });
+
+        return continueLoop;
     });
 
     return isDirty;
@@ -203,11 +222,11 @@ Scope.prototype.$digest = function () {
     var self = this;
     var dirty;
     var ttl = 10;
-    this.$lastDirtyWatch = null;
+    this.$root.$$lastDirtyWatch = null;
     this.$beginPhase('$digest');
 
-    if (this.$$applyAsyncId) {
-        clearTimeout(this.$$applyAsyncId);
+    if (this.$root.$$applyAsyncId) {
+        clearTimeout(this.$root.$$applyAsyncId);
         this.$$flushApplyAsync();
     }
 
@@ -237,4 +256,45 @@ Scope.prototype.$digest = function () {
             console.log(e);
         }
     }
+};
+
+Scope.prototype.$new = function (isIsolated, parent) {
+    var child;
+
+    if (!(parent instanceof Scope)) {
+        parent = parent || this;
+    }
+
+    if (!isIsolated) {
+        var ChildScope = function () {
+        };
+        ChildScope.prototype = Object.create(this);
+        child = new ChildScope();
+    } else {
+        child = new Scope();
+        child.$root = parent.$root;
+        child.$$phase = parent.$$phase;
+        child.$$asyncQueue = parent.$$asyncQueue;
+        child.$$postDigestQueue = parent.$$postDigestQueue;
+        child.$$applyAsyncQueue = parent.$$applyAsyncQueue;
+    }
+
+    parent.$$children.push(child);
+    child.$$children = [];
+    child.$$watchers = [];
+    child.$parent = parent;
+
+    return child;
+};
+
+Scope.prototype.$destroy = function () {
+    if (this.$parent) {
+        var siblings = this.$parent.$$children;
+        var index = siblings.indexOf(this);
+
+        if (index >= 0) {
+            siblings.splice(index, 1);
+        }
+    }
+    this.$$watchers = null;
 };
