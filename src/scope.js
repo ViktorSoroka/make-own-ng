@@ -15,6 +15,7 @@ function Scope() {
     this.$$phase = null;
     this.$$applyAsyncId = null;
     this.$$children = [];
+    this.$$listeners = {};
 }
 
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
@@ -282,6 +283,7 @@ Scope.prototype.$new = function (isIsolated, parent) {
     parent.$$children.push(child);
     child.$$children = [];
     child.$$watchers = [];
+    child.$$listeners = {};
     child.$parent = parent;
 
     return child;
@@ -401,4 +403,31 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
         }
     };
     return this.$watch(internalWatchFn, internalListenerFn);
+};
+
+Scope.prototype.$on = function (eventName, listener) {
+    var listeners = this.$$listeners[eventName];
+
+    if (!listeners) {
+        this.$$listeners[eventName] = listeners = [];
+    }
+
+    listeners.push(listener);
+};
+
+Scope.prototype.$$freEventOnScope = function(eventName) {
+    var listeners = this.$$listeners[eventName] || [];
+    _.forEach(listeners, function(listener) {
+        listener({
+            name: eventName
+        });
+    });
+};
+
+Scope.prototype.$emit = function (eventName) {
+    this.$$freEventOnScope(eventName);
+};
+
+Scope.prototype.$broadcast = function (eventName) {
+    this.$$freEventOnScope(eventName);
 };

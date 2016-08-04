@@ -14,7 +14,7 @@ describe('Scope', function () {
         expect(scope.aProperty).toBe(1);
     });
 
-    describe('digest', function () {
+    xdescribe('digest', function () {
 
         it('calls the listener function of a watch on first $digest', function () {
             var watchFn = function () {
@@ -371,7 +371,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$eval', function () {
+    xdescribe('$eval', function () {
 
         it('executes $evaled function and returns result', function () {
             scope.aValue = 42;
@@ -391,7 +391,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$apply', function () {
+    xdescribe('$apply', function () {
 
         it('executes the given function and starts the digest', function () {
             scope.aValue = 'someValue';
@@ -414,7 +414,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$evalAsync', function () {
+    xdescribe('$evalAsync', function () {
 
         it('executes given function later in the same cycle', function () {
             scope.aValue = [1, 2, 3];
@@ -557,7 +557,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$applyAsync', function () {
+    xdescribe('$applyAsync', function () {
 
         it('allows async $apply with $applyAsync', function (done) {
             scope.counter = 0;
@@ -651,7 +651,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$postDigest', function () {
+    xdescribe('$postDigest', function () {
 
         it('runs after each digest', function () {
             scope.counter = 0;
@@ -698,7 +698,7 @@ describe('Scope', function () {
 
     });
 
-    describe('$watchGroup', function () {
+    xdescribe('$watchGroup', function () {
 
         it('takes watches as an array and calls listener with arrays', function () {
             var gotNewValues, gotOldValues;
@@ -823,7 +823,7 @@ describe('Scope', function () {
 
     });
 
-    describe('inheritance', function () {
+    xdescribe('inheritance', function () {
 
         it('inherits the parents properties', function () {
             var parent = new Scope();
@@ -1535,6 +1535,71 @@ describe('Scope', function () {
             scope.$digest();
 
             expect(oldValueGiven).toEqual({a: 1, b: 2});
+        });
+
+    });
+
+    describe('$watchCollection', function () {
+        var parent;
+        var scope;
+        var child;
+        var isolatedChild;
+        beforeEach(function () {
+            parent = new Scope();
+            scope = parent.$new();
+            child = scope.$new();
+            isolatedChild = scope.$new(true);
+        });
+
+        it('allows registering listeners', function () {
+            var listener1 = function () {
+            };
+            var listener2 = function () {
+            };
+            var listener3 = function () {
+            };
+            scope.$on('someEvent', listener1);
+            scope.$on('someEvent', listener2);
+            scope.$on('someOtherEvent', listener3);
+            expect(scope.$$listeners).toEqual({
+                someEvent: [listener1, listener2],
+                someOtherEvent: [listener3]
+            });
+        });
+
+        it('registers different listeners for every scope', function () {
+            var listener1 = function () {
+            };
+            var listener2 = function () {
+            };
+            var listener3 = function () {
+            };
+            scope.$on('someEvent', listener1);
+            child.$on('someEvent', listener2);
+            isolatedChild.$on('someEvent', listener3);
+            expect(scope.$$listeners).toEqual({someEvent: [listener1]});
+            expect(child.$$listeners).toEqual({someEvent: [listener2]});
+            expect(isolatedChild.$$listeners).toEqual({someEvent: [listener3]});
+        });
+
+        _.forEach(['$emit', '$broadcast'], function (method) {
+            it('calls listeners registered for matching events on ' + method, function () {
+                var listener1 = jasmine.createSpy();
+                var listener2 = jasmine.createSpy();
+                scope.$on('someEvent', listener1);
+                scope.$on('someOtherEvent', listener2);
+                scope[method]('someEvent');
+                expect(listener1).toHaveBeenCalled();
+                expect(listener2).not.toHaveBeenCalled();
+            });
+
+            it('passes an event object with a namae to listeners on ' + method, function () {
+                var listener = jasmine.createSpy();
+                scope.$on('someEvent', listener);
+                scope[method]('someEvent');
+                expect(listener).toHaveBeenCalled();
+                expect(listener.calls.mostRecent().args[0].name).toEqual('someEvent');
+            });
         });
 
     });
