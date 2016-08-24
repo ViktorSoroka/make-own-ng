@@ -1,8 +1,11 @@
 'use strict';
 
 var parse = require('../src/parse');
+var _     = require('lodash');
+
 
 describe('parse', function () {
+
     it('can parse an integer', function () {
         var fn = parse('42');
         expect(fn).toBeDefined();
@@ -56,5 +59,62 @@ describe('parse', function () {
         expect(function () {
             parse('42e');
         }).toThrow();
+    });
+
+    it('can parse a string in single quotes', function () {
+        var fn = parse("'abc'");
+        expect(fn()).toEqual('abc');
+    });
+
+    it('can parse a string in double quotes', function () {
+        var fn = parse('"abc"');
+        expect(fn()).toEqual('abc');
+    });
+
+    it('will not parse a string with mismatching quotes', function () {
+        expect(function () {
+            parse('"abc\'');
+        }).toThrow();
+    });
+
+    it('can parse a string with single quotes inside', function () {
+        var fn = parse("'a\\\'b'");
+        expect(fn()).toEqual('a\'b');
+    });
+
+    it('can parse a string with double quotes inside', function () {
+        var fn = parse('"a\\\"b"');
+        expect(fn()).toEqual('a\"b');
+    });
+
+    it('will parse a string with unicode escapes', function () {
+        var fn = parse('"\\u00A0"');
+        expect(fn()).toEqual('\u00A0');
+    });
+
+    it('will not parse a string with invalid unicode escapes', function () {
+        expect(function () {
+            parse('"\\u00T0"');
+        }).toThrow();
+    });
+
+    it('will parse null', function () {
+        var fn = parse('null');
+        expect(fn()).toBe(null);
+    });
+
+    it('will parse true', function () {
+        var fn = parse('true');
+        expect(fn()).toBe(true);
+    });
+
+    it('will parse false', function () {
+        var fn = parse('false');
+        expect(fn()).toBe(false);
+    });
+
+    it('ignores whitespace', function() {
+        var fn = parse(' \n42 ');
+        expect(fn()).toEqual(42);
     });
 });
