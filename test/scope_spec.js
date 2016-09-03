@@ -15,7 +15,6 @@ describe('Scope', function () {
     });
 
     describe('digest', function () {
-
         it('calls the listener function of a watch on first $digest', function () {
             var watchFn    = function () {
                 return 'wat';
@@ -368,11 +367,9 @@ describe('Scope', function () {
             scope.$digest();
             expect(scope.counter).toBe(0);
         });
-
     });
 
     describe('$eval', function () {
-
         it('executes $evaled function and returns result', function () {
             scope.aValue = 42;
             var result   = scope.$eval(function (scope) {
@@ -388,11 +385,9 @@ describe('Scope', function () {
             }, 2);
             expect(result).toBe(44);
         });
-
     });
 
     describe('$apply', function () {
-
         it('executes the given function and starts the digest', function () {
             scope.aValue  = 'someValue';
             scope.counter = 0;
@@ -411,11 +406,9 @@ describe('Scope', function () {
             });
             expect(scope.counter).toBe(2);
         });
-
     });
 
     describe('$evalAsync', function () {
-
         it('executes given function later in the same cycle', function () {
             scope.aValue                    = [1, 2, 3];
             scope.asyncEvaluated            = false;
@@ -554,11 +547,9 @@ describe('Scope', function () {
                 done();
             }, 50);
         });
-
     });
 
     describe('$applyAsync', function () {
-
         it('allows async $apply with $applyAsync', function (done) {
             scope.counter = 0;
             scope.$watch(
@@ -648,11 +639,9 @@ describe('Scope', function () {
                 done();
             }, 50);
         });
-
     });
 
     describe('$postDigest', function () {
-
         it('runs after each digest', function () {
             scope.counter = 0;
             scope.$$postDigest(function () {
@@ -695,11 +684,9 @@ describe('Scope', function () {
             scope.$digest();
             expect(didRun).toBe(true);
         });
-
     });
 
     describe('$watchGroup', function () {
-
         it('takes watches as an array and calls listener with arrays', function () {
             var gotNewValues, gotOldValues;
             scope.aValue       = 1;
@@ -820,11 +807,9 @@ describe('Scope', function () {
             scope.$digest();
             expect(counter).toEqual(0);
         });
-
     });
 
     describe('inheritance', function () {
-
         it('inherits the parents properties', function () {
             var parent    = new Scope();
             parent.aValue = [1, 2, 3];
@@ -1153,11 +1138,9 @@ describe('Scope', function () {
             parent.$digest();
             expect(child.counter).toBe(2);
         });
-
     });
 
     describe('$watchCollection', function () {
-
         it('works like a normal watch for non-collections', function () {
             var valueProvided;
             scope.aValue  = 42;
@@ -1536,7 +1519,6 @@ describe('Scope', function () {
 
             expect(oldValueGiven).toEqual({ a: 1, b: 2 });
         });
-
     });
 
     describe('Events', function () {
@@ -1796,7 +1778,5 @@ describe('Scope', function () {
             scope.$emit('myEvent');
             expect(listener).not.toHaveBeenCalled();
         });
-
     });
-
 });

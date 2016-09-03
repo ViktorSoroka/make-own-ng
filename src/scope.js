@@ -78,7 +78,6 @@ Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
                 changeReactionScheduled = true;
                 self.$evalAsync(watchGroupListener);
             }
-
         });
 
     });
@@ -88,7 +87,6 @@ Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
             watcher();
         });
     };
-
 };
 
 Scope.prototype.$eval = function (expr, locals) {
@@ -155,6 +153,7 @@ Scope.prototype.$beginPhase = function (phase) {
     if (this.$$phase) {
         throw this.$$phase + ' already in progress.';
     }
+
     this.$$phase = phase;
 };
 
@@ -220,9 +219,10 @@ Scope.prototype.$$digestOnce = function () {
 };
 
 Scope.prototype.$digest = function () {
-    var self                    = this;
+    var self = this;
     var dirty;
-    var ttl                     = 10;
+    var ttl  = 10;
+
     this.$root.$$lastDirtyWatch = null;
     this.$beginPhase('$digest');
 
@@ -293,22 +293,23 @@ function isArrayLike(obj) {
     if (_.isNull(obj) || _.isUndefined(obj)) {
         return false;
     }
+
     var length = obj.length;
+
     return length === 0 ||
         (_.isNumber(length) && length > 0 && (length - 1) in obj);
 }
 
 Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
-    var self              = this;
+    var self               = this;
     var newValue;
-    var firstRun          = true;
+    var firstRun           = true;
     var veryOldValue;
-    var trackVeryOldValue = (listenerFn.length > 1);
+    var trackVeryOldValue  = (listenerFn.length > 1);
     var oldValue;
     var oldLength;
-    var changeCount       = 0;
-
-    var internalWatchFn = function (scope) {
+    var changeCount        = 0;
+    var internalWatchFn    = function (scope) {
         var newLength;
 
         newValue = watchFn(scope);
@@ -377,7 +378,6 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
         }
         return changeCount;
     };
-
     var internalListenerFn = function () {
         if (firstRun) {
             listenerFn(newValue, newValue, self);
@@ -390,6 +390,7 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
             veryOldValue = _.clone(newValue);
         }
     };
+
     return this.$watch(internalWatchFn, internalListenerFn);
 };
 
@@ -398,8 +399,8 @@ Scope.prototype.$destroy = function () {
 
     if (this.$parent) {
         var siblings = this.$parent.$$children;
+        var index    = siblings.indexOf(this);
 
-        var index = siblings.indexOf(this);
         if (index >= 0) {
             siblings.splice(index, 1);
         }
@@ -428,8 +429,8 @@ Scope.prototype.$on = function (eventName, listener) {
 
 Scope.prototype.$$fireEventOnScope = function (event, listenerArgs) {
     var listeners = this.$$listeners[event.name] || [];
+    var index     = 0;
 
-    var index = 0;
     while (listeners.length > index) {
         if (listeners[index] === null) {
             listeners.splice(index, 1);
@@ -461,6 +462,7 @@ Scope.prototype.$emit = function (eventName) {
         scope.$$fireEventOnScope(event, listenerArgs);
         scope = scope.$parent;
     }
+
     event.currentScope = null;
 
     return event;
