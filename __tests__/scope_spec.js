@@ -1,6 +1,6 @@
-'use strict';
-var Scope = require('../src/scope');
-var _     = require('lodash');
+import _ from 'lodash';
+
+import Scope from '../src/scope';
 
 describe('Scope', function () {
     var scope;
@@ -19,14 +19,14 @@ describe('Scope', function () {
             var watchFn    = function () {
                 return 'wat';
             };
-            var listenerFn = jasmine.createSpy();
+            var listenerFn = jest.fn();
             scope.$watch(watchFn, listenerFn);
             scope.$digest();
             expect(listenerFn).toHaveBeenCalled();
         });
 
         it('calls the watch function with the scope as the argument', function () {
-            var watchFn    = jasmine.createSpy();
+            var watchFn    = jest.fn();
             var listenerFn = function () {
             };
             scope.$watch(watchFn, listenerFn);
@@ -88,7 +88,7 @@ describe('Scope', function () {
         });
 
         it('may have watchers that omit the listener function', function () {
-            var watchFn = jasmine.createSpy().and.returnValue('something');
+            var watchFn = jest.fn(() => 'something');
             scope.$watch(watchFn);
             scope.$digest();
             expect(watchFn).toHaveBeenCalled();
@@ -1567,8 +1567,8 @@ describe('Scope', function () {
 
         _.forEach(['$emit', '$broadcast'], function (method) {
             it('calls listeners registered for matching events on ' + method, function () {
-                var listener1 = jasmine.createSpy();
-                var listener2 = jasmine.createSpy();
+                var listener1 = jest.fn();
+                var listener2 = jest.fn();
                 scope.$on('someEvent', listener1);
                 scope.$on('someOtherEvent', listener2);
                 scope[method]('someEvent');
@@ -1577,20 +1577,20 @@ describe('Scope', function () {
             });
 
             it('passes an event object with a namae to listeners on ' + method, function () {
-                var listener = jasmine.createSpy();
+                var listener = jest.fn();
                 scope.$on('someEvent', listener);
                 scope[method]('someEvent');
                 expect(listener).toHaveBeenCalled();
-                expect(listener.calls.mostRecent().args[0].name).toEqual('someEvent');
+                expect(listener.mock.calls[listener.mock.calls.length - 1][0].name).toEqual('someEvent');
             });
 
             it('passes additional arguments to listeners on ' + method, function () {
-                var listener = jasmine.createSpy();
+                var listener = jest.fn();
                 scope.$on('someEvent', listener);
                 scope[method]('someEvent', 'and', ['additional', 'arguments'], '...');
-                expect(listener.calls.mostRecent().args[1]).toEqual('and');
-                expect(listener.calls.mostRecent().args[2]).toEqual(['additional', 'arguments']);
-                expect(listener.calls.mostRecent().args[3]).toEqual('...');
+                expect(listener.mock.calls[listener.mock.calls.length - 1][1]).toEqual('and');
+                expect(listener.mock.calls[listener.mock.calls.length - 1][2]).toEqual(['additional', 'arguments']);
+                expect(listener.mock.calls[listener.mock.calls.length - 1][3]).toEqual('...');
             });
 
             it('returns the event object on ' + method, function () {
@@ -1600,7 +1600,7 @@ describe('Scope', function () {
             });
 
             it('can be deregistered ' + method, function () {
-                var listener   = jasmine.createSpy();
+                var listener   = jest.fn();
                 var deregister = scope.$on('someEvent', listener);
                 deregister();
                 scope[method]('someEvent');
@@ -1612,7 +1612,7 @@ describe('Scope', function () {
                 var listener     = function () {
                     deregister();
                 };
-                var nextListener = jasmine.createSpy();
+                var nextListener = jest.fn();
                 deregister       = scope.$on('someEvent', listener);
                 scope.$on('someEvent', nextListener);
                 scope[method]('someEvent');
@@ -1623,7 +1623,7 @@ describe('Scope', function () {
                 var listener1 = function (event) {
                     throw 'listener1 throwing an exception';
                 };
-                var listener2 = jasmine.createSpy();
+                var listener2 = jest.fn();
                 scope.$on('someEvent', listener1);
                 scope.$on('someEvent', listener2);
                 scope[method]('someEvent');
@@ -1632,8 +1632,8 @@ describe('Scope', function () {
         });
 
         it('propagates up the scope hierarchy on $emit', function () {
-            var parentListener = jasmine.createSpy();
-            var scopeListener  = jasmine.createSpy();
+            var parentListener = jest.fn();
+            var scopeListener  = jest.fn();
             parent.$on('someEvent', parentListener);
             scope.$on('someEvent', scopeListener);
             scope.$emit('someEvent');
@@ -1642,20 +1642,20 @@ describe('Scope', function () {
         });
 
         it('propagates the same event up on $emit', function () {
-            var parentListener = jasmine.createSpy();
-            var scopeListener  = jasmine.createSpy();
+            var parentListener = jest.fn();
+            var scopeListener  = jest.fn();
             parent.$on('someEvent', parentListener);
             scope.$on('someEvent', scopeListener);
             scope.$emit('someEvent');
-            var scopeEvent  = scopeListener.calls.mostRecent().args[0];
-            var parentEvent = parentListener.calls.mostRecent().args[0];
+            var scopeEvent  = scopeListener.mock.calls[scopeListener.mock.calls.length - 1][0];
+            var parentEvent = parentListener.mock.calls[parentListener.mock.calls.length - 1][0];
             expect(scopeEvent).toBe(parentEvent);
         });
 
         it('propagates down the scope hierarchy on $broadcast', function () {
-            var scopeListener         = jasmine.createSpy();
-            var childListener         = jasmine.createSpy();
-            var isolatedChildListener = jasmine.createSpy();
+            var scopeListener         = jest.fn();
+            var childListener         = jest.fn();
+            var isolatedChildListener = jest.fn();
             scope.$on('someEvent', scopeListener);
             child.$on('someEvent', childListener);
             isolatedChild.$on('someEvent', isolatedChildListener);
@@ -1666,23 +1666,23 @@ describe('Scope', function () {
         });
 
         it('attaches targetScope on $emit', function () {
-            var scopeListener  = jasmine.createSpy();
-            var parentListener = jasmine.createSpy();
+            var scopeListener  = jest.fn();
+            var parentListener = jest.fn();
             scope.$on('someEvent', scopeListener);
             parent.$on('someEvent', parentListener);
             scope.$emit('someEvent');
-            expect(scopeListener.calls.mostRecent().args[0].targetScope).toBe(scope);
-            expect(parentListener.calls.mostRecent().args[0].targetScope).toBe(scope);
+            expect(scopeListener.mock.calls[scopeListener.mock.calls.length - 1][0].targetScope).toBe(scope);
+            expect(parentListener.mock.calls[parentListener.mock.calls.length - 1][0].targetScope).toBe(scope);
         });
 
         it('attaches targetScope on $broadcast', function () {
-            var scopeListener = jasmine.createSpy();
-            var childListener = jasmine.createSpy();
+            var scopeListener = jest.fn();
+            var childListener = jest.fn();
             scope.$on('someEvent', scopeListener);
             child.$on('someEvent', childListener);
             scope.$broadcast('someEvent');
-            expect(scopeListener.calls.mostRecent().args[0].targetScope).toBe(scope);
-            expect(childListener.calls.mostRecent().args[0].targetScope).toBe(scope);
+            expect(scopeListener.mock.calls[scopeListener.mock.calls.length - 1][0].targetScope).toBe(scope);
+            expect(childListener.mock.calls[childListener.mock.calls.length - 1][0].targetScope).toBe(scope);
         });
 
         it('attaches currentScope on $emit', function () {
@@ -1739,7 +1739,7 @@ describe('Scope', function () {
             var scopeListener  = function (event) {
                 event.stopPropagation();
             };
-            var parentListener = jasmine.createSpy();
+            var parentListener = jest.fn();
             scope.$on('someEvent', scopeListener);
             parent.$on('someEvent', parentListener);
             scope.$emit('someEvent');
@@ -1750,7 +1750,7 @@ describe('Scope', function () {
             var listener1 = function (event) {
                 event.stopPropagation();
             };
-            var listener2 = jasmine.createSpy();
+            var listener2 = jest.fn();
             scope.$on('someEvent', listener1);
             scope.$on('someEvent', listener2);
             scope.$emit('someEvent');
@@ -1758,21 +1758,21 @@ describe('Scope', function () {
         });
 
         it('fires $destroy when destroyed', function () {
-            var listener = jasmine.createSpy();
+            var listener = jest.fn();
             scope.$on('$destroy', listener);
             scope.$destroy();
             expect(listener).toHaveBeenCalled();
         });
 
         it('fires $destroy on children destroyed', function () {
-            var listener = jasmine.createSpy();
+            var listener = jest.fn();
             child.$on('$destroy', listener);
             scope.$destroy();
             expect(listener).toHaveBeenCalled();
         });
 
         it('no longer calls listeners after destroyed', function () {
-            var listener = jasmine.createSpy();
+            var listener = jest.fn();
             scope.$on('myEvent', listener);
             scope.$destroy();
             scope.$emit('myEvent');

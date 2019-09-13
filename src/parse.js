@@ -1,4 +1,4 @@
-'use strict';
+import _ from 'lodash';
 
 var ESCAPES = {
     'n' : '\n',
@@ -10,7 +10,7 @@ var ESCAPES = {
     '"' : '"'
 };
 
-function parse(expr) {
+export function parse(expr) {
     var lexer  = new Lexer();
     var parser = new Parser(lexer);
 
@@ -354,7 +354,7 @@ ASTCompiler.prototype.escape = function (value) {
     }
 };
 
-function Parser(lexer) {
+export default function Parser(lexer) {
     this.lexer       = lexer;
     this.ast         = new AST(this.lexer);
     this.astCompiler = new ASTCompiler(this.ast);
@@ -363,5 +363,3 @@ function Parser(lexer) {
 Parser.prototype.parse = function (text) {
     return this.astCompiler.compile(text);
 };
-
-module.exports = parse;

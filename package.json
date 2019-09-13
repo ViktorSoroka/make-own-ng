@@ -4,31 +4,21 @@
   "description": "",
   "main": "index.js",
   "devDependencies": {
-    "browserify": "^13.0.0",
-    "jasmine-core": "^2.3.4",
-    "jshint": "^2.8.0",
-    "karma": "^0.13.15",
-    "karma-browserify": "^5.0.4",
-    "karma-chrome-launcher": "^1.0.1",
-    "karma-coverage": "^1.1.1",
-    "karma-jasmine": "^0.3.6",
-    "karma-jshint-preprocessor": "0.0.6",
-    "karma-phantomjs-launcher": "^1.0.0",
-    "phantomjs-prebuilt": "^2.1.7",
-    "sinon": "^1.17.2",
-    "uglifyjs": "^2.4.10",
-    "watchify": "^3.7.0"
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "babel-jest": "^24.9.0",
+    "eslint": "^6.3.0",
+    "jest": "^24.9.0",
+    "sinon": "^7.4.2"
   },
   "dependencies": {
-    "jquery": "^2.1.4",
-    "lodash": "^4.11.1"
+    "jquery": "^3.4.1",
+    "lodash": "^4.17.15"
   },
   "scripts": {
-    "lint": "jshint src test",
-    "test": "karma start",
-    "build": "browserify src/bootstrap.js > myangular.js",
-    "build:minified": "browserify src/bootstrap.js | uglifyjs -mc > myangular.min.js",
-    "ci:test": "karma start --browsers PhantomJS --single-run"
+    "lint": "eslint .",
+    "test": "jest",
+    "ci:test": "jest --ci"
   },
   "author": "",
   "license": "ISC"

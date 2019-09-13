@@ -1,11 +1,9 @@
 var _ = require('lodash');
 
-module.exports = Scope;
-
 function initWatchVal() {
 }
 
-function Scope() {
+export default function Scope() {
     this.$root             = this;
     this.$$watchers        = [];
     this.$$lastDirtyWatch  = null;
