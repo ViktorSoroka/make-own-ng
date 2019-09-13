@@ -23,7 +23,7 @@
     "lint": "eslint **/*.js",
     "pretty": "prettier --write \"**/*.js\"",
     "test": "jest",
-    "ci:test": "jest --ci"
+    "ci:test": "jest --ci --collect-coverage"
   },
   "author": "Viktor Soroka",
   "license": "ISC"
